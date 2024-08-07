@@ -19,7 +19,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <p>
         <?php //Html::a('Create Fields', ['create'], ['class' => 'btn btn-success']) ?>
-		<?= Html::a('Создать поле', ['#'], ['class' => 'btn btn-success','onClick' => 'createField();']) ?>
+	
+		<?= Html::button('Создать поле', [
+			'class' => 'btn btn-success',
+			'id' => 'toggleButton',
+			'onclick' => 'toggleField(this)'
+		]) ?>
     </p>
 
 

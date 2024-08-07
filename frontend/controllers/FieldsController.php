@@ -74,7 +74,7 @@ class FieldsController extends Controller
     public function actionCreate()
     {
         $model = new Fields();
-
+		
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -82,7 +82,14 @@ class FieldsController extends Controller
         } else {
             $model->loadDefaultValues();
         }
-
+		
+		
+		if($this->request->isAjax){
+			return $this->renderAjax('create', [
+				'model' => $model,
+			]);
+		}
+		
         return $this->render('create', [
             'model' => $model,
         ]);

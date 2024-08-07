@@ -19,12 +19,13 @@ class AppAsset extends AssetBundle
     public $depends = [
         'yii\web\YiiAsset',
         'yii\bootstrap5\BootstrapAsset',
+		'yii\bootstrap5\BootstrapPluginAsset',
 		'frontend\assets\OlAsset',
     ];
 	
 	public function init(){
     	if(Yii::$app->controller->id="map"){
-    		$this->js[]="js/ol.js";
+    		$this->js[]="js/globalModal.js";
     		$this->js[]="js/map.js";
 			$this->js[]="js/createField.js";
 			

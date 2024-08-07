@@ -1,3 +1,20 @@
+let isFieldCreated = false; // Переменная для отслеживания состояния
+
+function toggleField(button) {
+    if (isFieldCreated) {
+        map.removeInteraction(drawInteraction);
+        button.classList.remove('btn-danger'); // Убираем цвет остановки
+        button.classList.add('btn-success'); // Возвращаем начальный цвет
+        button.textContent = 'Создать поле'; // Обновляем текст
+    } else {
+        createField();
+        button.classList.remove('btn-success'); // Убираем начальный цвет
+        button.classList.add('btn-danger'); // Устанавливаем цвет остановки
+        button.textContent = 'Остановить поле'; // Обновляем текст
+    }
+    isFieldCreated = !isFieldCreated; // Переключаем состояние
+}
+
 // Ресурс создания полей
 const drawSource = new ol.source.Vector({
     projection: 'EPSG:4326',
@@ -37,11 +54,9 @@ const previewVector = new ol.layer.Vector({
 map.addLayer(drawVector);
 map.addLayer(previewVector);
 
-const typeSelect = ["Polygon", "LineString"];
-
 let drawInteraction, tracingFeature, startPoint, endPoint;
 let drawing = false;
-let coordar = [];
+
 const getFeatureOptions = {
     hitTolerance: 10,
     layerFilter: layer => layer === drawVector,
@@ -50,10 +65,6 @@ let previewCoords = [];
 
 // Функция обработки кликов на карте
 const handleClick = event => {
-    const coordinates = ol.proj.transform(event.coordinate, 'EPSG:3857', 'EPSG:4326');
-    coordar.push(coordinates);
-    console.log(coordar);
-
     if (!drawing) return;
 
     let hit = false;
@@ -96,7 +107,6 @@ const handlePointerMove = event => {
             previewCoords = getPartialRingCoords(tracingFeature, startPoint, endPoint);
         }
         previewLine.getGeometry().setCoordinates(previewCoords);
-        console.log(previewCoords);
     }
 };
 
@@ -104,12 +114,6 @@ const handlePointerMove = event => {
 function createField() {
     map.on('click', handleClick);
     map.on('pointermove', handlePointerMove);
-
-    typeSelect.onchange = () => {
-        map.removeInteraction(drawInteraction);
-        addInteraction();
-    };
-
     addInteraction();
 }
 
@@ -130,6 +134,20 @@ function addInteraction() {
         drawing = false;
         previewLine.getGeometry().setCoordinates([]);
         tracingFeature = null;
+
+        // Добавляем задержку перед получением координат
+        setTimeout(() => {
+            // Получаем координаты в нужном формате
+            const coordinates = getFormattedCoordinates();
+            console.log("Coordinates after drawend:", coordinates);
+
+            if (coordinates) {
+                // Передаем URL и параметры в функцию globalModal
+                globalModal("/fields/create", { 'Fields[coordinates]': coordinates }, "POST");
+            } else {
+                console.log("No features found in drawSource.");
+            }
+        }, 500); // 500ms задержка, можно настроить по необходимости
     });
 
     map.addInteraction(drawInteraction);
@@ -139,25 +157,25 @@ function addInteraction() {
 const handleKeyUp = event => {
     if (event.keyCode === 27) {
         drawInteraction.removeLastPoint();
-        coordar.pop();
     }
 };
 
-// Функция получения координат
-function Coordinates() {
-    let polygon = '';
+function getFormattedCoordinates() {
+    let coordinates = '';
     const feature = drawSource.getFeatures()[0];
+
     if (feature) {
+        // Преобразуем координаты в EPSG:4326
         feature.getGeometry().transform('EPSG:3857', 'EPSG:4326');
-        feature.getGeometry().getCoordinates().forEach(elem => {
-            elem.forEach(el => {
-                polygon += el.toString().replace(',', ' ') + ',';
-            });
-        });
+        const coords = feature.getGeometry().getCoordinates();
+
+        if (coords.length > 0) {
+            // Преобразуем координаты в строку
+            coordinates = coords[0].map(coord => coord.join(' ')).join(', ');
+        }
+
+        // Возвращаем координаты в исходную систему
         feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
-        polygon = polygon.slice(0, -1);
-        console.log(polygon);
     }
-}
-
-
+    return coordinates;
+}	
