@@ -14,11 +14,11 @@ git clone https://github.com/oDorohov/yii-map
 composer update
 php init
 php yii migrate
-php yii serve
+php yii serve --docroot="frontend/web"
 ```
 
 
-2.Откройте приложение в браузере:
+2. Откройте приложение в браузере:
 Перейдите по адресу http://localhost:8080.
 
 Используемые технологии
