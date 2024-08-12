@@ -23,7 +23,7 @@ function globalModal(url, params = {}, method = 'GET') {
     // Обработка данных в зависимости от метода запроса
     if (method.toUpperCase() === 'POST') {
         ajaxOptions.data = $.param(params); // Преобразуем параметры в формат application/x-www-form-urlencoded
-        ajaxOptions.contentType = 'application/x-www-form-urlencoded'; // Устанавливаем правильный contentType для POST
+        //ajaxOptions.contentType = 'application/x-www-form-urlencoded'; // Устанавливаем правильный contentType для POST
     } else {
         ajaxOptions.data = params; // Для GET просто передаем параметры
     }

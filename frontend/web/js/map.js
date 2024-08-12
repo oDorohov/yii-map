@@ -33,66 +33,8 @@ function onMoveEnd (){
 }
 
 map.on('moveend',onMoveEnd);
+let drawing = false;
 
-function fieldStyle(feature){
-
-	return new ol.style.Style({
-			stroke: new ol.style.Stroke({
-				color: 'black',
-				width: 1.5,
-			}),
-			fill: new ol.style.Fill({
-				color: feature.getProperties("properties").color,
-			}),
-			text: new ol.style.Text({
-				//color: 'black',
-				fill: new ol.style.Fill({
-					color:'black',
-				}),
-				stroke: new ol.style.Stroke({
-					color:'black',
-				}),
-				overflow: true,
-				//text: ['foo', 'bold 10px sans-serif', ' bar', 'italic 10px sans-serif', ' baz', ''],
-				offsetY: 0.1,
-				
-				text: feature.getProperties("properties").name,
-				scale:1.3,
-			}),
-			image: new ol.style.Circle({
-				geometry:"PointGeometryName",
-				radius: map.getView().getZoom()/2,
-				fill: new ol.style.Fill({color: 'white'}),
-				stroke: new ol.style.Stroke({color: '#3399CC', width: 2}),
-			}),
-		});
-	}
-
-
-
-var fieldSource =new ol.source.Vector({
-	format : new ol.format.GeoJSON(),
-	projection:'EPSG:4326',
-	
-});
-
-var fieldVector = new ol.layer.Vector({
-	//title: idField,
-	zIndex: 4,
-	source: fieldSource,
-	style: fieldStyle,
-});
-
-
-
-
-
-const layerGroup = new ol.layer.Group({
-	// layers: [fieldVector]	
-	layers: [
-		fieldVector,	
-	]	
-});
 
 
 function addFields(url,data) {
@@ -125,5 +67,5 @@ function addFields(url,data) {
 	});
 }
 
-//Добваление векторных слоев на карту
-map.addLayer(layerGroup);
+
+

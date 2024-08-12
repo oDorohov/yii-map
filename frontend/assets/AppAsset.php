@@ -27,9 +27,11 @@ class AppAsset extends AssetBundle
     	if(Yii::$app->controller->id="map"){
     		$this->js[]="js/globalModal.js";
     		$this->js[]="js/map.js";
+			$this->js[]="js/popupMenu.js";
 			$this->js[]="js/createField.js";
 			$this->js[]="js/fieldsLayer.js";
 			$this->css[]="css/map.css";
+			
     	} 
     	return parent::init();
     }

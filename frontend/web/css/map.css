@@ -9,4 +9,18 @@
 .field-info-list{
 	padding: 5px 0px;
 }
+.popup {
+    position: absolute;
+    background-color: white;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+    display: none; /* Скрываем элемент по умолчанию */
+}
 
+.popup-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}

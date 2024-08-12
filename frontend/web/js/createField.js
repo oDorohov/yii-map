@@ -7,11 +7,13 @@ function toggleField(button) {
         button.classList.remove('btn-danger');
         button.classList.add('btn-success');
         button.textContent = 'Создать поле';
+		drawing = false;
     } else {
         createField();
         button.classList.remove('btn-success');
         button.classList.add('btn-danger');
         button.textContent = 'Остановить поле';
+		drawing = true;
     }
     isFieldCreated = !isFieldCreated; // Переключаем состояние
 }
@@ -56,7 +58,7 @@ map.addLayer(drawVector);
 map.addLayer(previewVector);
 
 let drawInteraction, tracingFeature, startPoint, endPoint;
-let drawing = false;
+
 
 // Функция обработки кликов на карте
 const handleClick = event => {
@@ -124,10 +126,18 @@ function addInteraction() {
                 // Отправка координат на сервер с функцией-обработчиком при успешном сохранении
                 sendToServer("/fields/create", { 'Fields[coordinates]': coordinates }, "POST", (data) => {
                     // Обработчик успешного сохранения
-					console.log(data.id);
-                    const feature = event.feature; // Получаем объект feature, который был нарисован
-                    feature.set('serverId', data.id); // Пример: добавляем ID от сервера в атрибуты feature
+					
+                    const feature = event.feature;
+					// Получаем объект feature, который был нарисован
+                    // Пример: добавляем ID от сервера в атрибуты feature
                     console.log("Feature updated with server response:", feature);
+					console.log(data);
+					feature.setId(data.id);
+					
+					fieldsSource.addFeature(feature);
+					
+					drawSource.removeFeature(feature);
+					
                 });
             } else {
                 console.log("No features found in drawSource.");
@@ -136,7 +146,7 @@ function addInteraction() {
 
         previewLine.getGeometry().setCoordinates([]);
         tracingFeature = null;
-        drawing = false;
+       
     });
 
     map.addInteraction(drawInteraction);
@@ -183,6 +193,7 @@ function sendToServer(url, params = {}, method = 'GET', onSuccess = null) {
 
     $.ajax(ajaxOptions);
 }
+
 
 
 

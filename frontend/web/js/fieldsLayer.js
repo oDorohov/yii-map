@@ -3,7 +3,7 @@
 // Создание источника данных для GeoJSON
 var fieldsSource =new ol.source.Vector({
 	url : "/fields/get",
-	format : new ol.format.GeoJSON(),
+	format : new ol.format.GeoJSON({extractGeometryName:true}),
 });
 	    
 var fieldsLayer = new ol.layer.Vector({
@@ -15,3 +15,4 @@ var fieldsLayer = new ol.layer.Vector({
 
 map.addLayer(fieldsLayer);
 
+initPopupMenu(map, fieldsSource);

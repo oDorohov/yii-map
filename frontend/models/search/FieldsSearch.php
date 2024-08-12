@@ -71,7 +71,7 @@ class FieldsSearch extends Fields
 	
 	public function searchAsGeoJson($params)
     {
-        $query = Fields::find()->select(['ST_AsGeoJSON(fields.coordinates) as coordinates']);
+        $query = Fields::find()->select(["*",'ST_AsGeoJSON(fields.coordinates) as coordinates']);
 
         // add conditions that should always apply here
 

@@ -49,6 +49,9 @@ AppAsset::register($this);
         </div>
     </div>
 </div>
+<div id="popup" class="popup">
+    <div id="popup-content"></div>
+</div>
 <?php $this->endBody() ?>
 </body>
 </html>

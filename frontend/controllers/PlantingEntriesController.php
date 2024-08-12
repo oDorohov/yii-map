@@ -2,17 +2,16 @@
 
 namespace frontend\controllers;
 
-use Yii;
-use frontend\models\Fields;
-use frontend\models\search\FieldsSearch;
+use frontend\models\PlantingEntries;
+use frontend\models\search\PlantingEntriesSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use \stdClass;
+
 /**
- * FieldsController implements the CRUD actions for Fields model.
+ * PlantingEntriesController implements the CRUD actions for PlantingEntries model.
  */
-class FieldsController extends Controller
+class PlantingEntriesController extends Controller
 {
     /**
      * @inheritDoc
@@ -33,29 +32,31 @@ class FieldsController extends Controller
     }
 
     /**
-     * Lists all Fields models.
+     * Lists all PlantingEntries models.
      *
      * @return string
      */
     public function actionIndex()
-    {		
-        $searchModel = new FieldsSearch();
+    {
+        $searchModel = new PlantingEntriesSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
-		if ($this->request->isPjax){
-			return $this->renderPartial('index', [
+		
+		if ($this->request->isAjax){ 
+			
+			return $this->renderAjax('index', [
 				'searchModel' => $searchModel,
 				'dataProvider' => $dataProvider,
 			]);
 		}
-		
+        
 		return $this->render('index', [
-			'searchModel' => $searchModel,
-			'dataProvider' => $dataProvider,
-		]);
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     /**
-     * Displays a single Fields model.
+     * Displays a single PlantingEntries model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -68,40 +69,29 @@ class FieldsController extends Controller
     }
 
     /**
-     * Creates a new Fields model.
+     * Creates a new PlantingEntries model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Fields();
-		
+        $model = new PlantingEntries();
+
         if ($this->request->isPost) {
-			if ($model->load($this->request->post()) && $model->save()) {
-                if($this->request->isAjax){
-					Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-					return $model;	
-				}
-				return $this->redirect(['view', 'id' => $model->id]);
+            if ($model->load($this->request->post()) && $model->save()) {
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
         }
-		
-		
-		if($this->request->isAjax){
-			return $this->renderAjax('create', [
-				'model' => $model,
-			]);
-		}
-		
+
         return $this->render('create', [
             'model' => $model,
         ]);
     }
 
     /**
-     * Updates an existing Fields model.
+     * Updates an existing PlantingEntries model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -121,7 +111,7 @@ class FieldsController extends Controller
     }
 
     /**
-     * Deletes an existing Fields model.
+     * Deletes an existing PlantingEntries model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -130,46 +120,20 @@ class FieldsController extends Controller
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-		if($this->request->isAjax){
-			return true;
-		}
-		return $this->redirect(['index']);
-    }
-	
-	public function actionGet(){
-        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $searchModel = new FieldsSearch();
-        $dataProvider = $searchModel->searchAsGeoJson(Yii::$app->request->queryParams);
-        $dataProvider->pagination = false;
-		$models=$dataProvider->getModels();
-		$featureCollection = new stdClass;
-		$featureCollection->type = "FeatureCollection";
-		
-		
-		foreach ($models as $model){
-			
-			$feature = new stdClass;
-			$feature->type = 'Feature';
-            $feature->geometry_name ="poly";
-			$feature->id = $model->id;
-			$feature->geometry= json_decode($model->coordinates);
-			$featureCollection->features[]=$feature;
-			
-		}
-		
-		return $featureCollection;
+
+        return $this->redirect(['index']);
     }
 
     /**
-     * Finds the Fields model based on its primary key value.
+     * Finds the PlantingEntries model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Fields the loaded model
+     * @return PlantingEntries the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Fields::findOne(['id' => $id])) !== null) {
+        if (($model = PlantingEntries::findOne(['id' => $id])) !== null) {
             return $model;
         }
 
