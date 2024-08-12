@@ -2,12 +2,13 @@
 
 namespace frontend\controllers;
 
+use Yii;
 use frontend\models\Fields;
 use frontend\models\search\FieldsSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-
+use \stdClass;
 /**
  * FieldsController implements the CRUD actions for Fields model.
  */
@@ -76,8 +77,12 @@ class FieldsController extends Controller
         $model = new Fields();
 		
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+			if ($model->load($this->request->post()) && $model->save()) {
+                if($this->request->isAjax){
+					Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+					return $model;	
+				}
+				return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
@@ -127,6 +132,29 @@ class FieldsController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+	
+	public function actionGet(){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $searchModel = new FieldsSearch();
+        $dataProvider = $searchModel->searchAsGeoJson(Yii::$app->request->queryParams);
+        $dataProvider->pagination = false;
+		$models=$dataProvider->getModels();
+		$featureCollection = new stdClass;
+		$featureCollection->type = "FeatureCollection";
+		
+		
+		foreach ($models as $model){
+			
+			$feature = new stdClass;
+			$feature->type = 'Feature';
+            $feature->geometry_name ="poly";
+			$feature->geometry= json_decode($model->coordinates);
+			$featureCollection->features[]=$feature;
+			
+		}
+		
+		return $featureCollection;
     }
 
     /**

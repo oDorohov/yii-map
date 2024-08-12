@@ -16,7 +16,7 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'square')->textInput() ?>
 
-    <?= $form->field($model, 'coordinates')->textInput() ?>
+    <?= $form->field($model, 'coordinates')->hiddenInput() ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>

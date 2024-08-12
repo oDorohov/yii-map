@@ -14,7 +14,7 @@ class m240805_162042_create_fields_table extends Migration
     {
         $this->createTable('{{%fields}}', [
             'id' => $this->primaryKey(),
-			'name'=>$this->string()->notNull(),
+			'name'=>$this->string(),
 			'square'=>$this->float(),
 			'coordinates'=>'polygon',
         ]);

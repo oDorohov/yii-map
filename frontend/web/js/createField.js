@@ -1,21 +1,22 @@
 let isFieldCreated = false; // Переменная для отслеживания состояния
 
+// Функция для переключения состояния создания поля
 function toggleField(button) {
     if (isFieldCreated) {
         map.removeInteraction(drawInteraction);
-        button.classList.remove('btn-danger'); // Убираем цвет остановки
-        button.classList.add('btn-success'); // Возвращаем начальный цвет
-        button.textContent = 'Создать поле'; // Обновляем текст
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-success');
+        button.textContent = 'Создать поле';
     } else {
         createField();
-        button.classList.remove('btn-success'); // Убираем начальный цвет
-        button.classList.add('btn-danger'); // Устанавливаем цвет остановки
-        button.textContent = 'Остановить поле'; // Обновляем текст
+        button.classList.remove('btn-success');
+        button.classList.add('btn-danger');
+        button.textContent = 'Остановить поле';
     }
     isFieldCreated = !isFieldCreated; // Переключаем состояние
 }
 
-// Ресурс создания полей
+// Создание источника данных для рисования
 const drawSource = new ol.source.Vector({
     projection: 'EPSG:4326',
 });
@@ -24,7 +25,7 @@ const previewLine = new ol.Feature({
     geometry: new ol.geom.LineString([]),
 });
 
-// Слои создания полей
+// Создание слоев для рисования и предпросмотра
 const drawVector = new ol.layer.Vector({
     source: drawSource,
     style: new ol.style.Style({
@@ -57,12 +58,6 @@ map.addLayer(previewVector);
 let drawInteraction, tracingFeature, startPoint, endPoint;
 let drawing = false;
 
-const getFeatureOptions = {
-    hitTolerance: 10,
-    layerFilter: layer => layer === drawVector,
-};
-let previewCoords = [];
-
 // Функция обработки кликов на карте
 const handleClick = event => {
     if (!drawing) return;
@@ -84,7 +79,7 @@ const handleClick = event => {
 
         tracingFeature = feature;
         startPoint = tracingFeature.getGeometry().getClosestPoint(coord);
-    }, getFeatureOptions);
+    }, { hitTolerance: 10, layerFilter: layer => layer === drawVector });
 
     if (!hit) {
         previewLine.getGeometry().setCoordinates([]);
@@ -95,17 +90,9 @@ const handleClick = event => {
 // Функция обработки перемещения указателя мыши
 const handlePointerMove = event => {
     if (tracingFeature && drawing) {
-        let coord = null;
-        map.forEachFeatureAtPixel(event.pixel, feature => {
-            if (tracingFeature === feature) {
-                coord = map.getCoordinateFromPixel(event.pixel);
-            }
-        }, getFeatureOptions);
-
-        if (coord) {
-            endPoint = tracingFeature.getGeometry().getClosestPoint(coord);
-            previewCoords = getPartialRingCoords(tracingFeature, startPoint, endPoint);
-        }
+        const coord = map.getCoordinateFromPixel(event.pixel);
+        endPoint = tracingFeature.getGeometry().getClosestPoint(coord);
+        const previewCoords = getPartialRingCoords(tracingFeature, startPoint, endPoint);
         previewLine.getGeometry().setCoordinates(previewCoords);
     }
 };
@@ -129,25 +116,27 @@ function addInteraction() {
         document.addEventListener('keyup', handleKeyUp);
     });
 
-    drawInteraction.on('drawend', () => {
-        map.removeInteraction(drawInteraction);
-        drawing = false;
-        previewLine.getGeometry().setCoordinates([]);
-        tracingFeature = null;
-
-        // Добавляем задержку перед получением координат
+    drawInteraction.on('drawend', (event) => {
         setTimeout(() => {
-            // Получаем координаты в нужном формате
             const coordinates = getFormattedCoordinates();
             console.log("Coordinates after drawend:", coordinates);
-
             if (coordinates) {
-                // Передаем URL и параметры в функцию globalModal
-                globalModal("/fields/create", { 'Fields[coordinates]': coordinates }, "POST");
+                // Отправка координат на сервер с функцией-обработчиком при успешном сохранении
+                sendToServer("/fields/create", { 'Fields[coordinates]': coordinates }, "POST", (data) => {
+                    // Обработчик успешного сохранения
+					console.log(data.id);
+                    const feature = event.feature; // Получаем объект feature, который был нарисован
+                    feature.set('serverId', data.id); // Пример: добавляем ID от сервера в атрибуты feature
+                    console.log("Feature updated with server response:", feature);
+                });
             } else {
                 console.log("No features found in drawSource.");
             }
-        }, 500); // 500ms задержка, можно настроить по необходимости
+        }, 500);
+
+        previewLine.getGeometry().setCoordinates([]);
+        tracingFeature = null;
+        drawing = false;
     });
 
     map.addInteraction(drawInteraction);
@@ -155,27 +144,45 @@ function addInteraction() {
 
 // Обработка нажатий клавиш
 const handleKeyUp = event => {
-    if (event.keyCode === 27) {
+    if (event.keyCode === 27) { // Esc key
         drawInteraction.removeLastPoint();
     }
 };
 
+// Функция для получения отформатированных координат
 function getFormattedCoordinates() {
-    let coordinates = '';
-    const feature = drawSource.getFeatures()[0];
+    const feature = drawSource.getFeatures().at(-1); // Получаем последнюю добавленную фигуру
+    if (!feature) return '';
 
-    if (feature) {
-        // Преобразуем координаты в EPSG:4326
-        feature.getGeometry().transform('EPSG:3857', 'EPSG:4326');
-        const coords = feature.getGeometry().getCoordinates();
+    feature.getGeometry().transform('EPSG:3857', 'EPSG:4326');
+    const coords = feature.getGeometry().getCoordinates();
+    feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
 
-        if (coords.length > 0) {
-            // Преобразуем координаты в строку
-            coordinates = coords[0].map(coord => coord.join(' ')).join(', ');
+    return coords.length > 0 
+        ? coords[0].map(coord => coord.join(' ')).join(', ')
+        : '';
+}
+
+// Функция отправки данных на сервер
+function sendToServer(url, params = {}, method = 'GET', onSuccess = null) {
+    params.ajax = true;
+
+    const ajaxOptions = {
+        url: url,
+        method: method.toUpperCase(),
+        data: method.toUpperCase() === 'POST' ? $.param(params) : params,
+        contentType: method.toUpperCase() === 'POST' ? 'application/x-www-form-urlencoded' : undefined,
+        success: data => {
+            console.log("Save successful");
+            if (onSuccess) onSuccess(data); // Вызов обработчика при успешном сохранении
+        },
+        error: (xhr, status, error) => {
+            console.log("Error:", error);
         }
+    };
 
-        // Возвращаем координаты в исходную систему
-        feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
-    }
-    return coordinates;
-}	
+    $.ajax(ajaxOptions);
+}
+
+
+

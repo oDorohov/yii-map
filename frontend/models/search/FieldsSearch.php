@@ -68,4 +68,34 @@ class FieldsSearch extends Fields
 
         return $dataProvider;
     }
+	
+	public function searchAsGeoJson($params)
+    {
+        $query = Fields::find()->select(['ST_AsGeoJSON(fields.coordinates) as coordinates']);
+
+        // add conditions that should always apply here
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            // uncomment the following line if you do not want to return any records when validation fails
+            // $query->where('0=1');
+            return $dataProvider;
+        }
+
+        // grid filtering conditions
+        $query->andFilterWhere([
+            'id' => $this->id,
+            'square' => $this->square,
+        ]);
+
+        $query->andFilterWhere(['like', 'name', $this->name])
+            ->andFilterWhere(['like', 'coordinates', $this->coordinates]);
+
+        return $dataProvider;
+    }
 }

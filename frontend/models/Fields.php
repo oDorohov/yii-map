@@ -15,14 +15,7 @@ use yii\db\Expression;
  */
 class Fields extends \common\models\Fields
 {
-    /**
-     * {@inheritdoc}
-     */
-    public static function tableName()
-    {
-        return 'fields';
-    }
-	
+
 	public function beforeSave($insert) 
    { 
        if (!parent::beforeSave($insert)) { 
@@ -31,8 +24,5 @@ class Fields extends \common\models\Fields
        $this->coordinates = new Expression( "ST_PolygonFromText('POLYGON((".$this->coordinates ."))',0)"); 
        return true; 
    }
-    /**
-     * {@inheritdoc}
-     */
 
 }
